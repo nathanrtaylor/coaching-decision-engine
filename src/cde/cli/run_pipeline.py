@@ -27,6 +27,7 @@ def main() -> None:
 
     raw_dir = Path(args.raw_dir)
     out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
     configs_dir = Path(args.configs_dir)
 
     config = resolve_active_config(configs_dir)
@@ -41,12 +42,17 @@ def main() -> None:
     validate_inputs(normalized, config)
 
     signals = build_signals(normalized, config)
+    signals.to_csv(out_dir / "signals.csv", index=False)
 
     thr_res = apply_signal_thresholds(signals, config)
     eligible_signals = thr_res.eligible_signals
     excluded_signals = thr_res.excluded_signals
+    eligible_signals, excluded_signals = apply_signal_thresholds(signals, config)
+    eligible_signals.to_csv(out_dir / "eligible_signals.csv", index=False)
+    excluded_signals.to_csv(out_dir / "excluded_signals.csv", index=False)
 
     scores = assemble_scores(eligible_signals, config)
+    scores.to_csv(out_dir / "scores.csv", index=False)
 
     print("eligible_signals rows:", len(eligible_signals))
     print("scores rows:", 0 if scores is None else len(scores))
