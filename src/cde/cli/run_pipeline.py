@@ -47,6 +47,14 @@ def main() -> None:
     excluded_signals = thr_res.excluded_signals
 
     scores = assemble_scores(eligible_signals, config)
+
+    print("eligible_signals rows:", len(eligible_signals))
+    print("scores rows:", 0 if scores is None else len(scores))
+    print("scores cols:", None if scores is None else list(scores.columns))
+
+    if scores is None or (hasattr(scores, "empty") and scores.empty):
+        raise RuntimeError("Scoring layer returned None or empty DataFrame. Check src/cde/scoring/assemble.py and individual score modules.")
+    
     candidates = build_topic_candidates(eligible_signals, scores, config)
     recs = recommend_for_population(candidates, config)
 

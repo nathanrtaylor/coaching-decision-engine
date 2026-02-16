@@ -140,6 +140,12 @@ def build_signals(normalized: Dict[str, pd.DataFrame], config: Dict[str, Any]) -
         df = normalized[source_name].copy()
 
         schema = (s.get("schema") or {})
+
+        # ✅ Skip dimension/non-metric sources (e.g., agents)
+        if (s.get("type") == "dimension") or (schema.get("metric_key") in (None, "null", "")):
+            log.info("Skipping non-metric source '%s' in build_signals()", source_name)
+            continue
+        
         entity_keys = (schema.get("entity_keys") or {})
         agent_col = entity_keys.get("agent_id", "agent_id")
         period_col = entity_keys.get("period", "week_start")
@@ -183,6 +189,32 @@ def build_signals(normalized: Dict[str, pd.DataFrame], config: Dict[str, Any]) -
         raise ValueError("No source tables were found/loaded. Check normalized inputs and source_catalog.yaml.")
 
     base = pd.concat(frames, ignore_index=True)
+
+    # --------------------------------------------------
+    # Enrich with org fields from agents.csv (if present)
+    # --------------------------------------------------
+
+    agents_raw = normalized.get("agents")
+
+    if agents_raw is not None and not agents_raw.empty:
+
+        agents = agents_raw.copy()
+
+        # Standardize to canonical keys
+        agents["agent_id"] = agents["expert_id"].astype(str)
+        agents["period"] = agents["week_ending"]
+
+        agents = agents.drop_duplicates(["agent_id", "period"])
+
+        # Ensure base keys are strings for safe join
+        base["agent_id"] = base["agent_id"].astype(str)
+
+        base = base.merge(
+            agents[["agent_id", "period", "mascot", "icp_client", "coach", "coach_id"]],
+            on=["agent_id", "period"],
+            how="left"
+        )
+
 
     # Map to canonical metric names
     base["metric"] = [
@@ -319,6 +351,10 @@ def build_signals(normalized: Dict[str, pd.DataFrame], config: Dict[str, Any]) -
     keep_cols = [
         "agent_id",
         "period",
+        "mascot",
+        "icp_client",
+        "coach",
+        "coach_id",
         "call_type",
         "metric",
         "category",

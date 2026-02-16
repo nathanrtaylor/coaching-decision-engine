@@ -6,7 +6,7 @@ signal_thresholds:
   global:
 
     # If confidence < min_confidence, signal cannot become a candidate
-    min_confidence: 0.55
+    min_confidence: 0.0
 
     # Volatility cap (normalized / relative). If a metric swings too much, don't coach it.
     # For PoC, this is a simple rule; later you can compute volatility as rolling std / mean etc.
@@ -27,9 +27,9 @@ signal_thresholds:
 
     business:
       # More willing to coach business metrics (lower bar)
-      min_confidence: 0.50
+      min_confidence: 0.0
       # For rate metrics: absolute gap from benchmark (e.g., +0.02 = 2 points worse/better)
-      min_abs_gap_from_benchmark: 0.015
+      min_abs_gap_from_benchmark: 0.00
       # Trend threshold: pct change in the wrong direction (e.g. 0.10 = 10% worse vs prior)
       min_bad_trend_pct: 0.08
 
@@ -40,7 +40,7 @@ signal_thresholds:
 
     quality_behavior:
       # Behaviors are noisy; higher bar by default
-      min_confidence: 0.70
+      min_confidence: 0.0
       # If benchmark is distribution-based, use z thresholds instead of abs gap
       min_bad_z: 0.75
       min_bad_trend_pct: 0.12
@@ -53,13 +53,13 @@ signal_thresholds:
   by_metric:
 
     transfer_rate:
-      min_confidence: 0.55
-      min_abs_gap_from_benchmark: 0.010
+      min_confidence: 0.0
+      min_abs_gap_from_benchmark: 0.0
       min_bad_trend_pct: 0.06
 
     resolution_rate:
-      min_confidence: 0.55
-      min_abs_gap_from_benchmark: 0.010
+      min_confidence: 0.0
+      min_abs_gap_from_benchmark: 0.00
       min_bad_trend_pct: 0.06
 
     smart_offer_adoption:

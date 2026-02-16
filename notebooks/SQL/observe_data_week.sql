@@ -62,10 +62,8 @@ observe_data AS (
 
 SELECT
     m.emplid as expert_id,
-    m.week_,
-    m.icp_client,
-    m.tenure_group,
-    t.tenure,
+    m.week_ AS week_ending,
+    'all' AS call_type,
     b.template_questions_name,
     b.behavior_name,
     SUM(b.score)       AS num,
@@ -77,10 +75,4 @@ LEFT JOIN observe_data b
     ON m.emplid = b.emplid
    AND m.date   = b.date
 GROUP BY
-    m.emplid,
-    m.week_,
-    m.icp_client,
-    m.tenure_group,
-    t.tenure,
-    b.template_questions_name,
-    b.behavior_name;
+1, 2, 3, 4, 5

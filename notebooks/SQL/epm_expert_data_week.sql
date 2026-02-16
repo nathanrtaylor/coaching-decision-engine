@@ -1,12 +1,8 @@
 SELECT 
-CAST(week_stop_date AS DATE) AS week_,
---date,
+CAST(week_stop_date AS DATE) AS week_ending,
 expert_id,
--- year_month,
+'all' AS call_type,
 metric,
-icp_client,
-tenure_group,
-site,
 SUM(numerator) AS num,
 SUM(denominator) AS den,
 ROUND(
@@ -26,4 +22,4 @@ LOWER(metric) IN :metric_list
 AND LOWER(icp_client) IN :icp_client_list
 AND a."date" between DATE :start_date and DATE :end_date 
 --and expert_id IN :expert_ids
-GROUP BY 1, 2, 3, 4, 5, 6
+GROUP BY 1, 2, 3, 4

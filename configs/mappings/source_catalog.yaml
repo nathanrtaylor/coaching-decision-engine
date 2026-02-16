@@ -6,6 +6,23 @@ source_catalog:
 
   sources:
 
+    agents:
+      type: dimension
+      description: "Org data to be shared across all sources, including icp_client, mascot, and tenure group"
+      owner: ops_reporting
+      refresh_frequency: weekly
+      status: active
+
+      schema:
+        entity_keys:
+          agent_id: expert_id
+          period: week_ending
+        metric_key: null
+        numerator: null
+        denominator: null
+        calculation: null
+        value: null
+
     agent_metrics:
       description: "Core operational business metrics (tall-skinny)."
       owner: ops_reporting
@@ -14,14 +31,14 @@ source_catalog:
 
       schema:
         entity_keys:
-          agent_id: agent_id
-          period: week_start
+          agent_id: expert_id
+          period: week_ending
           call_type: call_type
 
-        metric_key: metric_name
-        numerator: numerator
-        denominator: denominator
-        calculation: calculation         # rate | avg | sum | count | score
+        metric_key: metric
+        numerator: num
+        denominator: den
+        calculation: calc         # rate | avg | sum | count | score
         value: value                     # optional
 
       computation:
@@ -49,8 +66,8 @@ source_catalog:
 
       schema:
         entity_keys:
-          agent_id: agent_id
-          period: week_start
+          agent_id: expert_id
+          period: week_ending
           call_type: call_type
 
         metric_key: behavior_name
