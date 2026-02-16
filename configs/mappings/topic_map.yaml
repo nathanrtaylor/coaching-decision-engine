@@ -1,0 +1,60 @@
+topic_map:
+
+  # ---------------------------------------------------
+  # Canonical metric -> coaching topic mapping
+  # ---------------------------------------------------
+  # This is NOT priorities. It's a semantic mapping layer.
+  # Priorities (weights) live elsewhere and can change weekly.
+  # Topics should be durable names executives recognize.
+
+  metric_to_topic:
+
+    # ===== Business outcomes
+    transfer_rate: "Reduce Transfer Rate"
+    resolution_rate: "Improve Resolution Rate"
+    cancel_rate: "Reduce Cancel Rate"
+
+    # ===== Tool usage
+    guided_flow_adoption: "Increase Guided Flow Adoption"
+    expert_assist_usage: "Increase Expert Assist Usage"
+    smart_offer_adoption: "Improve Smart Offer Adoption"
+
+    # ===== Behaviors (default mapped, but typically ineligible until approved)
+    empathy_statement: "Strengthen Empathy Statements"
+    transition_statement: "Use Clear Transition Statements"
+
+  # ---------------------------------------------------
+  # Optional: topic -> default conversation type
+  # (Engine can override based on severity later; start deterministic)
+  # ---------------------------------------------------
+  topic_to_conversation_type:
+    "Reduce Transfer Rate": "Performance Correction"
+    "Improve Resolution Rate": "Performance Coaching"
+    "Reduce Cancel Rate": "Performance Correction"
+
+    "Increase Guided Flow Adoption": "Tool Enablement"
+    "Increase Expert Assist Usage": "Tool Enablement"
+    "Improve Smart Offer Adoption": "Tool Enablement"
+
+    "Strengthen Empathy Statements": "Quality Coaching"
+    "Use Clear Transition Statements": "Quality Coaching"
+
+  # ---------------------------------------------------
+  # Optional: call-type specific topic constraints
+  # (Hard eligibility still belongs in eligibility config, but this is a good
+  # place to keep semantic constraints if you want)
+  # ---------------------------------------------------
+  allowed_topics_by_call_type:
+    claims:
+      - "Improve Resolution Rate"
+      - "Reduce Transfer Rate"
+      - "Increase Expert Assist Usage"
+
+    tech_support:
+      - "Reduce Transfer Rate"
+      - "Increase Expert Assist Usage"
+      - "Increase Guided Flow Adoption"
+
+    device_activation:
+      - "Increase Guided Flow Adoption"
+      - "Improve Smart Offer Adoption"

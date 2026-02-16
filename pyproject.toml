@@ -1,0 +1,57 @@
+[project]
+name = "coaching-decision-engine"
+version = "0.1.0"
+description = "Deterministic, explainable coaching decision engine (signals -> scoring -> priorities -> recommendations -> receipts)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [
+  { name = "Coaching Technology" }
+]
+dependencies = [
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "pyyaml>=6.0",
+  "pyarrow>=15.0",   # for parquet read/write
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.4",
+  "mypy>=1.8",
+  "ipykernel>=6.29",
+  "jupyter>=1.0",
+]
+
+[project.scripts]
+cde-run-pipeline = "cde.cli.run_pipeline:main"
+cde-run-engine = "cde.cli.run_engine:main"
+cde-run-simulation = "cde.cli.run_simulation:main"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E203", "E266"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

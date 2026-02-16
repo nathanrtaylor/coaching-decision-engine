@@ -1,0 +1,42 @@
+# ---- secrets / env ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*service-account*.json
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ---- notebooks ----
+.ipynb_checkpoints/
+
+# ---- OS / IDE ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ---- generated artifacts ----
+outputs/runs/**
+
+# ---- data (generated or external drops) ----
+data/raw/**
+data/interim/**
+data/marts/**
+data/**/*.csv
+
+# keep small samples + fixtures
+!data/samples/**

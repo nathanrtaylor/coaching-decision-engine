@@ -1,0 +1,142 @@
+source_catalog:
+
+  # ---------------------------------------------------
+  # Source definitions (ingestion contract)
+  # ---------------------------------------------------
+
+  sources:
+
+    agent_metrics:
+      description: "Core operational business metrics (tall-skinny)."
+      owner: ops_reporting
+      refresh_frequency: weekly
+      status: active
+
+      schema:
+        entity_keys:
+          agent_id: agent_id
+          period: week_start
+          call_type: call_type
+
+        metric_key: metric_name
+        numerator: numerator
+        denominator: denominator
+        calculation: calculation         # rate | avg | sum | count | score
+        value: value                     # optional
+
+      computation:
+        prefer_value_column_if_present: true
+        default_calculation: null
+        calculation_handlers:
+          rate:   { formula: numerator / denominator, denominator_min: 1 }
+          avg:    { formula: numerator / denominator, denominator_min: 1 }
+          sum:    { formula: numerator }
+          count:  { formula: numerator }
+          score:  { formula: numerator }
+
+      data_quality:
+        # used by confidence scoring / gating
+        default_denominator_min: 10
+        freshness_days_max: 10
+        null_rate_max: 0.15
+
+
+    behavior_scores:
+      description: "AI-scored quality behaviors (often score-only)."
+      owner: analytics
+      refresh_frequency: weekly
+      status: active
+
+      schema:
+        entity_keys:
+          agent_id: agent_id
+          period: week_start
+          call_type: call_type
+
+        metric_key: behavior_name
+        numerator: score
+        denominator: null
+        calculation: null
+        value: null
+
+      computation:
+        prefer_value_column_if_present: false
+        default_calculation: score
+        calculation_handlers:
+          score: { formula: numerator }
+
+      data_quality:
+        freshness_days_max: 10
+        null_rate_max: 0.10
+
+
+    expert_assist:
+      description: "Expert Assist usage & outcomes (tall-skinny)."
+      owner: product_ops
+      refresh_frequency: weekly
+      status: active
+
+      schema:
+        entity_keys:
+          agent_id: agent_id
+          period: week_start
+          call_type: call_type
+
+        metric_key: metric_name
+        numerator: numerator
+        denominator: denominator
+        calculation: calculation
+        value: value
+
+      computation:
+        prefer_value_column_if_present: true
+        default_calculation: null
+        calculation_handlers:
+          rate:   { formula: numerator / denominator, denominator_min: 1 }
+          count:  { formula: numerator }
+
+      data_quality:
+        default_denominator_min: 10
+        freshness_days_max: 10
+        null_rate_max: 0.20
+
+
+    smart_offer:
+      description: "Smart Offer adoption & performance metrics (tall-skinny)."
+      owner: product_ops
+      refresh_frequency: weekly
+      status: active
+
+      schema:
+        entity_keys:
+          agent_id: agent_id
+          period: week_start
+          call_type: call_type
+
+        metric_key: metric_name
+        numerator: numerator
+        denominator: denominator
+        calculation: calculation
+        value: value
+
+      computation:
+        prefer_value_column_if_present: true
+        default_calculation: null
+        calculation_handlers:
+          rate:   { formula: numerator / denominator, denominator_min: 1 }
+          sum:    { formula: numerator }
+          count:  { formula: numerator }
+
+      data_quality:
+        default_denominator_min: 10
+        freshness_days_max: 10
+        null_rate_max: 0.20
+
+
+  # ---------------------------------------------------
+  # Global governance for sources (optional but useful)
+  # ---------------------------------------------------
+  governance:
+    require_owner: true
+    require_refresh_frequency: true
+    require_metric_key: true
