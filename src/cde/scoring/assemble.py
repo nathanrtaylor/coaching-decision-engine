@@ -126,4 +126,30 @@ def assemble_scores(signals: pd.DataFrame, config: Dict[str, Any]) -> pd.DataFra
         if c not in merged.columns:
             merged[c] = 0.0 if c.startswith("score_") else None
 
+    # keep the expected columns only
+    out_cols = [
+        "agent_id", "period", "call_type", "metric",
+        "score_level", "score_trend", "score_risk", "score_confidence", "score_total"
+    ]
+    for c in out_cols:
+        if c not in merged.columns:
+            merged[c] = 0.0 if c.startswith("score_") else None
+
+    # ------------------------------------------------------------------
+    # Guardrail: enforce 1 row per scoring key (prevents downstream inflation)
+    # If duplicates exist, keep the highest score_total deterministically.
+    KEYS = ["agent_id", "period", "call_type", "metric"]
+    dup_count = int(merged.duplicated(subset=KEYS, keep=False).sum())
+    if dup_count:
+        log.warning(
+            "assemble_scores: found %s duplicate rows on keys=%s; de-duping by max(score_total).",
+            dup_count, KEYS
+        )
+        merged = (
+            merged.sort_values("score_total", ascending=False)
+                  .drop_duplicates(subset=KEYS, keep="first")
+                  .reset_index(drop=True)
+        )
+    # ------------------------------------------------------------------
+
     return merged[out_cols].copy()
