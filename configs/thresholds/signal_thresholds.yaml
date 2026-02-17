@@ -1,106 +1,31 @@
 signal_thresholds:
 
-  # ---------------------------------------------------
-  # Global guardrails (apply to all signals unless overridden)
-  # ---------------------------------------------------
+  mode: development   # development | production
+
   global:
-
-    # If confidence < min_confidence, signal cannot become a candidate
     min_confidence: 0.0
+    max_volatility: null
+    min_denominator_default: 0
 
-    # Volatility cap (normalized / relative). If a metric swings too much, don't coach it.
-    # For PoC, this is a simple rule; later you can compute volatility as rolling std / mean etc.
-    max_volatility: 0.25
-
-    # Minimum volume / stability requirement when denom exists
-    # (This is a backstop; per-metric denom mins live in metric_catalog too.)
-    min_denominator_default: 10
-
-    # How many past periods needed to compute trend reliably
-    min_periods_for_trend: 2
-
-
-  # ---------------------------------------------------
-  # Category defaults (business > tool > behavior)
-  # ---------------------------------------------------
   by_category:
-
     business:
-      # More willing to coach business metrics (lower bar)
-      min_confidence: 0.0
-      # For rate metrics: absolute gap from benchmark (e.g., +0.02 = 2 points worse/better)
-      min_abs_gap_from_benchmark: 0.00
-      # Trend threshold: pct change in the wrong direction (e.g. 0.10 = 10% worse vs prior)
-      min_bad_trend_pct: 0.08
-
-    tool_usage:
-      min_confidence: 0.55
-      min_abs_gap_from_benchmark: 0.05
-      min_bad_trend_pct: 0.10
-
-    quality_behavior:
-      # Behaviors are noisy; higher bar by default
-      min_confidence: 0.0
-      # If benchmark is distribution-based, use z thresholds instead of abs gap
-      min_bad_z: 0.75
-      min_bad_trend_pct: 0.12
-
-
-  # ---------------------------------------------------
-  # Metric-specific overrides
-  # (Use this for known high-noise metrics or executive-sensitive metrics.)
-  # ---------------------------------------------------
-  by_metric:
-
-    transfer_rate:
       min_confidence: 0.0
       min_abs_gap_from_benchmark: 0.0
-      min_bad_trend_pct: 0.06
+      min_bad_trend_pct: 0.0
 
-    resolution_rate:
+    tool_usage:
       min_confidence: 0.0
-      min_abs_gap_from_benchmark: 0.00
-      min_bad_trend_pct: 0.06
+      min_abs_gap_from_benchmark: 0.0
+      min_bad_trend_pct: 0.0
 
-    smart_offer_adoption:
-      # Tool metrics can be “campaigny” — require bigger movement
-      min_abs_gap_from_benchmark: 0.07
-      min_bad_trend_pct: 0.12
+    quality_behavior:
+      min_confidence: 0.0
+      min_bad_z: 0.0
+      min_bad_trend_pct: 0.0
 
-
-  # ---------------------------------------------------
-  # Call type overrides
-  # (E.g., claims may tolerate different gaps than tech support.)
-  # ---------------------------------------------------
-  by_call_type:
-
-    claims:
-      business:
-        min_abs_gap_from_benchmark: 0.010
-      tool_usage:
-        min_abs_gap_from_benchmark: 0.04
-
-    tech_support:
-      business:
-        min_abs_gap_from_benchmark: 0.020
-      tool_usage:
-        min_abs_gap_from_benchmark: 0.06
-
-
-  # ---------------------------------------------------
-  # Candidate eligibility strategy (deterministic)
-  # ---------------------------------------------------
   candidate_rules:
-
-    # How many candidate topics max per agent-period before engine selection
-    max_candidates_per_agent: 5
-
-    # Require either (gap OR z) AND optionally trend
-    require_bad_magnitude: true
+    require_bad_magnitude: false
     require_bad_trend: false
-
-    # If true: only consider signals that are getting worse (wrong-direction trend)
     only_worsening: false
-
-    # If true: drop signals with missing benchmark AND missing distribution reference
-    require_reference_point: true
+    require_reference_point: false
+    max_candidates_per_agent: 10

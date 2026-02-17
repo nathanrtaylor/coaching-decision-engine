@@ -52,6 +52,16 @@ def build_topic_candidates(signals: pd.DataFrame, scores: pd.DataFrame, config: 
         how="left",
     )
 
+    # Backward/forward compatible score column naming
+    rename_map = {
+        "score_level": "level_score",
+        "score_trend": "trend_score",
+        "score_risk": "risk_score",
+        "score_confidence": "confidence_score",
+        "score_total": "total_score",   
+    }
+    df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
+
     # Map canonical metric -> topic (drop if unmapped unless explicitly allowed)
     df["topic"] = df["metric"].map(metric_to_topic)
     if allow_unmapped:

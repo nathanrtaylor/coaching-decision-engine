@@ -47,7 +47,7 @@ def main() -> None:
     thr_res = apply_signal_thresholds(signals, config)
     eligible_signals = thr_res.eligible_signals
     excluded_signals = thr_res.excluded_signals
-    eligible_signals, excluded_signals = apply_signal_thresholds(signals, config)
+
     eligible_signals.to_csv(out_dir / "eligible_signals.csv", index=False)
     excluded_signals.to_csv(out_dir / "excluded_signals.csv", index=False)
 

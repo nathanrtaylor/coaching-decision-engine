@@ -9,7 +9,7 @@ import pandas as pd
 
 from cde.explainability.evidence import build_competitors
 from cde.explainability.templates import narrative_why_this, narrative_why_now, narrative_why_not
-
+from cde.utils.io import _json_default
 
 def build_receipts(
     recommendations: pd.DataFrame,
@@ -119,7 +119,7 @@ def receipts_to_jsonl(receipts: pd.DataFrame) -> str:
         # Ensure pandas/numpy types don't break JSON serialization
         obj = _json_safe(obj)
 
-        lines.append(json.dumps(obj, ensure_ascii=False))
+        lines.append(json.dumps(obj, ensure_ascii=False, default=_json_default))
     return "\n".join(lines) + "\n"
 
 
