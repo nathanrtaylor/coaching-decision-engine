@@ -9,6 +9,8 @@ import pandas as pd
 
 from cde.signals.benchmarks import get_benchmark_value, benchmark_gap
 from cde.utils.logging import get_logger
+from typing import Any, Optional
+from cde.signals.load_inputs import load_normalized_for_signals
 
 log = get_logger(__name__)
 
@@ -83,7 +85,6 @@ def _compute_value_row(
 
     # unknown calc => fall back to raw value if present
     return raw_value
-
 
 def build_signals(normalized: Dict[str, pd.DataFrame], config: Dict[str, Any]) -> pd.DataFrame:
     """
@@ -201,7 +202,7 @@ def build_signals(normalized: Dict[str, pd.DataFrame], config: Dict[str, Any]) -
         agents = agents_raw.copy()
 
         # Standardize to canonical keys
-        agents["agent_id"] = agents["expert_id"].astype(str)
+        agents["agent_id"] = agents["agent_id"].astype(str)
         agents["period"] = agents["week_ending"]
 
         agents = agents.drop_duplicates(["agent_id", "period"])

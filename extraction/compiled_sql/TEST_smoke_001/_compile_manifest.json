@@ -1,0 +1,26 @@
+{
+  "compiled_at_utc": "2026-03-03T16:57:30+00:00",
+  "compiled_dir": "C:\\Users\\nathan.taylor\\Jupyter Notebooks\\coaching-decision-engine\\extraction\\compiled_sql\\TEST_smoke_001",
+  "items": [
+    {
+      "compiled_sql_path": "C:\\Users\\nathan.taylor\\Jupyter Notebooks\\coaching-decision-engine\\extraction\\compiled_sql\\TEST_smoke_001\\agent_metrics.sql",
+      "context_keys": [
+        "end_date",
+        "extraction_ts_utc",
+        "grain",
+        "icp_clients",
+        "metrics",
+        "run_id",
+        "source_schema",
+        "source_table",
+        "start_date"
+      ],
+      "flattened": true,
+      "output": "agent_metrics",
+      "sql_file": "extraction/sql/agent_metrics.sql.j2",
+      "sql_sha256": "6b2f2adcb9804abef0f7f4179ca189c160fe9abf141ba08f7bfbc83e0bfef015",
+      "strip_trailing_semicolon": true
+    }
+  ],
+  "run_id": "TEST_smoke_001"
+}

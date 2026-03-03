@@ -1,0 +1,54 @@
+-- extraction/sql/agent_metrics.sql.j2
+WITH agg AS (
+  SELECT
+    a.expert_id AS agent_id,
+    {# compute period according to requested grain; make week => week-ending (Friday) #}
+      {% if grain == "week" %}
+      CAST(
+        date_add(
+          'day',
+          4,
+          date_trunc('week', CAST(a."date" AS TIMESTAMP))
+        ) AS DATE
+      ) AS period,
+      {% else %}
+CAST(date_trunc('{{ grain }}', CAST(a."date" AS TIMESTAMP)) AS DATE) AS period,
+{% endif %}
+    LOWER(a.metric) AS metric,
+    a.icp_client,
+    a.site,
+    SUM(a.numerator)   AS numerator,
+    SUM(a.denominator) AS denominator
+  FROM {{ source_schema }}.{{ source_table }} a
+  {# Optional calendar join if you ever need pay-week alignment #}
+  {% if use_pay_calendar | default(false) %}
+  LEFT JOIN {{ calendar_schema }}.{{ calendar_table }} d
+    ON CAST(a."date" AS DATE) = CAST(d.event_date AS DATE)
+  {% endif %}
+  WHERE CAST(a."date" AS DATE) BETWEEN DATE '{{ start_date }}' AND DATE '{{ end_date }}'
+  AND LOWER(a.metric) IN (
+    {% for m in metrics %}'{{ m | lower }}'{% if not loop.last %},{% endif %}{% endfor %}
+  )
+  AND LOWER(a.icp_client) IN (
+    {% for c in icp_clients %}'{{ c | lower }}'{% if not loop.last %},{% endif %}{% endfor %}
+  )
+  GROUP BY 1,2,3,4,5
+)
+
+SELECT
+  agent_id,
+  CAST(period AS DATE) AS week_ending,
+  'all' as call_type,
+  metric,
+  icp_client,
+  site,
+  CAST(numerator AS DOUBLE)   AS numerator,
+  CAST(denominator AS DOUBLE) AS denominator,
+  ROUND(
+    COALESCE(
+      CAST(numerator AS DOUBLE) / NULLIF(CAST(denominator AS DOUBLE), 0.0),
+      0.000
+    ),
+    3
+  ) AS calc
+FROM agg

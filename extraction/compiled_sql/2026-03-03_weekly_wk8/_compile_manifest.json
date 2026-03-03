@@ -1,0 +1,67 @@
+{
+  "compiled_at_utc": "2026-03-03T22:05:16+00:00",
+  "compiled_dir": "C:\\Users\\nathan.taylor\\Jupyter Notebooks\\coaching-decision-engine\\extraction\\compiled_sql\\2026-03-03_weekly_wk8",
+  "items": [
+    {
+      "compiled_sql_path": "C:\\Users\\nathan.taylor\\Jupyter Notebooks\\coaching-decision-engine\\extraction\\compiled_sql\\2026-03-03_weekly_wk8\\agent_metrics.sql",
+      "context_keys": [
+        "end_date",
+        "extraction_ts_utc",
+        "grain",
+        "icp_clients",
+        "metrics",
+        "run_id",
+        "source_schema",
+        "source_table",
+        "start_date",
+        "use_pay_calendar"
+      ],
+      "flattened": true,
+      "output": "agent_metrics",
+      "sql_file": "extraction/sql/agent_metrics.sql.j2",
+      "sql_sha256": "5c1ae43067a49caf5be2cc97cd210cca6836f560de52fb22e194dcdbadda7383",
+      "strip_trailing_semicolon": true
+    },
+    {
+      "compiled_sql_path": "C:\\Users\\nathan.taylor\\Jupyter Notebooks\\coaching-decision-engine\\extraction\\compiled_sql\\2026-03-03_weekly_wk8\\agents.sql",
+      "context_keys": [
+        "end_date",
+        "extraction_ts_utc",
+        "grain",
+        "icp_clients",
+        "run_id",
+        "source_schema",
+        "source_table",
+        "start_date",
+        "use_pay_calendar"
+      ],
+      "flattened": true,
+      "output": "agents",
+      "sql_file": "extraction/sql/agents.sql.j2",
+      "sql_sha256": "fc9162b3c90a1edbdbfaeeb07ef0f6c28599e7f137a0c5070674c03d71f3b21e",
+      "strip_trailing_semicolon": true
+    },
+    {
+      "compiled_sql_path": "C:\\Users\\nathan.taylor\\Jupyter Notebooks\\coaching-decision-engine\\extraction\\compiled_sql\\2026-03-03_weekly_wk8\\behavior_scores.sql",
+      "context_keys": [
+        "end_date",
+        "epm_table",
+        "extraction_ts_utc",
+        "grain",
+        "icp_clients",
+        "observe_scorecards",
+        "observe_table",
+        "run_id",
+        "source_schema",
+        "start_date",
+        "use_pay_calendar"
+      ],
+      "flattened": true,
+      "output": "behavior_scores",
+      "sql_file": "extraction/sql/behavior_scores.sql.j2",
+      "sql_sha256": "3cba74f1adc848dcb0486dca7a7fd3feb7488a66b56e89f5324da58c0ff77ee9",
+      "strip_trailing_semicolon": true
+    }
+  ],
+  "run_id": "2026-03-03_weekly_wk8"
+}

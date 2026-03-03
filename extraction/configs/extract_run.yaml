@@ -1,0 +1,88 @@
+# ============================================================
+# Coaching Decision Engine — Extraction Run Spec
+# ============================================================
+
+run:
+  run_id: "2026-03-03_weekly_wk8"
+  compiled_sql_dir: "extraction/compiled_sql"
+  output_dir: "data/raw/weekly"
+  flatten_sql: true
+  strip_trailing_semicolon: true
+
+globals:
+  source_schema: "hive.care"
+
+  start_date: "2026-01-06"
+  end_date:   "2026-03-03"
+  grain: "week"
+
+  # Always define optional flags globally to avoid StrictUndefined failures
+  use_pay_calendar: false
+
+  icp_clients:
+    - "pss-verizon"
+    - "pss-at&t"
+    - "mob-verizon"
+    - "mob-at&t"
+
+outputs:
+  agent_metrics:
+    sql_file: "extraction/sql/agent_metrics.sql.j2"
+    output_file: "agent_metrics.csv"
+    require_rows: true
+    expected_columns:
+      - agent_id
+      - period
+      - metric
+      - icp_client
+      - site
+      - numerator
+      - denominator
+      - calc
+    params:
+      source_table: "expert_performance_metrics"
+      metrics:
+        - "nsp100"
+        - "crt"
+        - "transfer_rate"
+        - "resolution_rate"
+      # keep overrides here only if you ever turn it on
+      # calendar_schema: "hive.care"
+      # calendar_table: "dim_pay_calendar"
+
+  agents:
+    sql_file: "extraction/sql/agents.sql.j2"
+    output_file: "agents.csv"
+    require_rows: true
+    expected_columns:
+      - week_ending
+      - agent_id
+      - mascot
+      - icp_client
+      - tenure_group
+      - coach
+      - coach_id
+    params:
+      source_table: "expert_performance_metrics"    
+
+  behavior_scores:
+    sql_file: "extraction/sql/behavior_scores.sql.j2"
+    output_file: "behavior_scores.csv"
+    require_rows: true
+    expected_columns:
+      - agent_id
+      - period
+      - call_type
+      - scorecard_name
+      - behavior
+      - numerator
+      - denominator
+      - calc
+    params:
+      epm_table: "expert_performance_metrics"
+      observe_table: "l3_asurion_observe_behaviors_scores"
+
+      # governed list of scorecards (template_questions_name)
+      observe_scorecards:
+        - "HEROES Auto Scorecard"
+        - "HEROES Auto QA Reporting - VZW"

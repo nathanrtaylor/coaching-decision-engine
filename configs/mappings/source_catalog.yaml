@@ -15,7 +15,7 @@ source_catalog:
 
       schema:
         entity_keys:
-          agent_id: expert_id
+          agent_id: agent_id
           period: week_ending
         
         data_quality:
@@ -30,7 +30,7 @@ source_catalog:
 
       schema:
         entity_keys:
-          agent_id: expert_id
+          agent_id: agent_id
           period: week_ending
           call_type: call_type
 
@@ -65,11 +65,11 @@ source_catalog:
 
       schema:
         entity_keys:
-          agent_id: expert_id
+          agent_id: agent_id
           period: week_ending
           call_type: call_type
 
-        metric_key: behavior_name
+        metric_key: behavior
         numerator: num
         denominator: den
         calculation: null

@@ -1,0 +1,24 @@
+run:
+  run_id: "TEST_smoke_001"
+  compiled_sql_dir: "extraction/compiled_sql"
+  output_dir: "data/raw/weekly"
+  flatten_sql: true
+  strip_trailing_semicolon: true
+
+globals:
+  source_schema: "hive.care"
+  start_date: "2026-02-20"
+  end_date:   "2026-02-25"
+  grain: "day"
+
+outputs:
+  agent_metrics:
+    sql_file: "extraction/sql/agent_metrics.sql.j2"
+    output_file: "agent_metrics.csv"
+    require_rows: false   # smoke test — don’t fail if empty
+    params:
+      source_table: "expert_performance_metrics"
+      icp_clients:
+        - "pss-verizon"
+      metrics:
+        - "crt"
