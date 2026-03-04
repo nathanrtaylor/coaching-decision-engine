@@ -44,8 +44,16 @@ outputs:
       metrics:
         - "nsp100"
         - "crt"
-        - "transfer_rate"
-        - "resolution_rate"
+        - "client transfers"
+        - "erp"
+        - "expert 5star"
+        - "cancellation rate"
+        - "hold time"
+        - "talk time"
+        - "callback_rate"
+        - "ocr"
+        - "resolution rate"  
+
       # keep overrides here only if you ever turn it on
       # calendar_schema: "hive.care"
       # calendar_table: "dim_pay_calendar"

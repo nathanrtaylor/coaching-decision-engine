@@ -7,6 +7,51 @@ benchmarks:
     by_call_type:
       claims: 0.10
       tech_support: 0.14
+  cancel_rate:
+    default: 0.12
+    by_call_type:
+      claims: 0.10
+      tech_support: 0.14  
+  erp:
+    default: 0.8
+    by_call_type:
+      claims: 0.10
+      tech_support: 0.14  
+  one_call_resolution:
+    default: 0.2
+    by_call_type:
+      claims: 0.10
+      tech_support: 0.14 
+  hold_time:
+    default: 50
+    by_call_type:
+      claims: 0.10
+      tech_support: 0.14 
+  talk_time:
+    default: 50
+    by_call_type:
+      claims: 0.10
+      tech_support: 0.14 
+  callback_rate:
+    default: 0.1
+    by_call_type:
+      claims: 0.10
+      tech_support: 0.14 
+  expert_5star:
+    default: 0.8
+    by_call_type:
+      claims: 0.10
+      tech_support: 0.14
+  nsp100:
+    default: 1
+    by_call_type:
+      claims: 0.10
+      tech_support: 0.14 
+  crt:
+    default: 800
+    by_call_type:
+      claims: 0.10
+      tech_support: 0.14                                    
   resolution_rate:
     default: 0.78
     by_call_type:

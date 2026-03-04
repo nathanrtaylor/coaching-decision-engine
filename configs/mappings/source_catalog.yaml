@@ -16,7 +16,7 @@ source_catalog:
       schema:
         entity_keys:
           agent_id: agent_id
-          period: week_ending
+          period: period
         
         data_quality:
           freshness_days_max: 10
@@ -31,12 +31,12 @@ source_catalog:
       schema:
         entity_keys:
           agent_id: agent_id
-          period: week_ending
+          period: period
           call_type: call_type
 
         metric_key: metric
-        numerator: num
-        denominator: den
+        numerator: numerator
+        denominator: denominator
         calculation: null         # rate | avg | sum | count | score
         value: calc                    # optional
 
@@ -66,14 +66,14 @@ source_catalog:
       schema:
         entity_keys:
           agent_id: agent_id
-          period: week_ending
+          period: period
           call_type: call_type
 
         metric_key: behavior
-        numerator: num
-        denominator: den
+        numerator: numerator
+        denominator: denominator
         calculation: null
-        value: null
+        value: calc
 
       computation:
         prefer_value_column_if_present: false
@@ -95,7 +95,7 @@ source_catalog:
       schema:
         entity_keys:
           agent_id: agent_id
-          period: week_start
+          period: period
           call_type: call_type
 
         metric_key: metric_name
@@ -126,7 +126,7 @@ source_catalog:
       schema:
         entity_keys:
           agent_id: agent_id
-          period: week_start
+          period: period
           call_type: call_type
 
         metric_key: metric_name

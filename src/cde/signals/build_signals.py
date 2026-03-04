@@ -164,7 +164,21 @@ def build_signals(normalized: Dict[str, pd.DataFrame], config: Dict[str, Any]) -
         # Create standardized columns
         out = pd.DataFrame()
         out["agent_id"] = df[agent_col]
-        out["period"] = df[period_col]
+        # Canonicalize period for this source
+        if "period" in df.columns:
+            out["period"] = df["period"]
+        elif period_col in df.columns:
+            out["period"] = df[period_col]
+        elif "week_ending" in df.columns:
+            out["period"] = df["week_ending"]
+        elif "week_start" in df.columns:
+            out["period"] = df["week_start"]
+        else:
+            raise KeyError(
+                f"build_signals: period column not found for source '{name}'. "
+                f"Looked for 'period', '{period_col}', 'week_ending', 'week_start'. "
+                f"Available columns: {list(df.columns)}"
+        )
 
         if call_type_col in df.columns:
             out["call_type"] = df[call_type_col]

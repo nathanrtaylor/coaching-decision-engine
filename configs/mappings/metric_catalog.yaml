@@ -13,7 +13,7 @@ metric_catalog:
 
     transfer_rate:
       source: agent_metrics
-      source_metric_key: "transfers"
+      source_metric_key: "client transfers"
       category: business
       direction: lower_is_better
       unit: rate
@@ -22,7 +22,7 @@ metric_catalog:
       eligible_for_prioritization: true
       computation_override:
         expected_calculation: rate
-        denominator_min: 50
+        denominator_min: 20
       benchmark:
         type: config
         key: transfer_rate
@@ -43,18 +43,82 @@ metric_catalog:
         type: config
         key: resolution_rate
 
+    one_call_resolution:
+      source: agent_metrics
+      source_metric_key: "ocr"
+      category: business
+      direction: higher_is_better
+      unit: rate
+      description: "Resolved / eligible calls on the first call"
+      required: true
+      eligible_for_prioritization: true
+      computation_override:
+        expected_calculation: rate
+        denominator_min: 30
+      benchmark:
+        type: config
+        key: one_call_resolution      
+
+    hold_time:
+      source: agent_metrics
+      source_metric_key: "hold time"
+      category: business
+      direction: lower_is_better
+      unit: rate
+      description: "time spent on hold / calls"
+      required: true
+      eligible_for_prioritization: true
+      computation_override:
+        expected_calculation: average
+        denominator_min: 10
+      benchmark:
+        type: config
+        key: hold_time     
+
+    talk_time:
+      source: agent_metrics
+      source_metric_key: "talk time"
+      category: business
+      direction: lower_is_better
+      unit: rate
+      description: "time spent on talking / calls"
+      required: true
+      eligible_for_prioritization: true
+      computation_override:
+        expected_calculation: average
+        denominator_min: 10
+      benchmark:
+        type: config
+        key: talk_time    
+
+    callback_rate:
+      source: agent_metrics
+      source_metric_key: "callback_rate"
+      category: business
+      direction: lower_is_better
+      unit: rate
+      description: "outbound calls to customers / calls"
+      required: true
+      eligible_for_prioritization: true
+      computation_override:
+        expected_calculation: rate
+        denominator_min: 10
+      benchmark:
+        type: config
+        key: callback_rate          
+
     cancel_rate:
       source: agent_metrics
       source_metric_key: "cancellation rate"
       category: business
       direction: lower_is_better
       unit: rate
-      description: "Cancellation rate during/after call."
+      description: "sales cancellations after the call"
       required: false
       eligible_for_prioritization: true
       computation_override:
         expected_calculation: rate
-        denominator_min: 30
+        denominator_min: 5
       benchmark:
         type: config
         key: cancel_rate
@@ -75,6 +139,22 @@ metric_catalog:
         type: config
         key: erp  
 
+    expert_5star:
+      source: agent_metrics
+      source_metric_key: "expert 5star"
+      category: business
+      direction: higher_is_better
+      unit: rate
+      description: "Expert survey based scoring only when 5 stars is received"
+      required: false
+      eligible_for_prioritization: true
+      computation_override:
+        expected_calculation: rate
+        denominator_min: 5
+      benchmark:
+        type: config
+        key: expert_5star
+
     nsp100:
       source: agent_metrics
       source_metric_key: "nsp100"
@@ -86,7 +166,7 @@ metric_catalog:
       eligible_for_prioritization: true
       computation_override:
         expected_calculation: rate
-        denominator_min: 25
+        denominator_min: 5
       benchmark:
         type: config
         key: nsp100        
@@ -101,7 +181,7 @@ metric_catalog:
       required: false
       eligible_for_prioritization: true
       computation_override:
-        expected_calculation: rate
+        expected_calculation: average
         denominator_min: 5
       benchmark:
         type: config

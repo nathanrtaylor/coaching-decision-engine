@@ -1,5 +1,5 @@
 {
-  "compiled_at_utc": "2026-03-03T22:05:16+00:00",
+  "compiled_at_utc": "2026-03-04T14:38:33+00:00",
   "compiled_dir": "C:\\Users\\nathan.taylor\\Jupyter Notebooks\\coaching-decision-engine\\extraction\\compiled_sql\\2026-03-03_weekly_wk8",
   "items": [
     {
@@ -19,7 +19,7 @@
       "flattened": true,
       "output": "agent_metrics",
       "sql_file": "extraction/sql/agent_metrics.sql.j2",
-      "sql_sha256": "5c1ae43067a49caf5be2cc97cd210cca6836f560de52fb22e194dcdbadda7383",
+      "sql_sha256": "d12e9284c91fc5d6048221f28ba79e89aca682bf03931a854767f325f04cfb57",
       "strip_trailing_semicolon": true
     },
     {

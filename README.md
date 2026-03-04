@@ -6,253 +6,314 @@ coaching topic and conversation type for a given coaching session.
 This engine translates operational performance data into governed
 coaching recommendations that are:
 
--   Business-aligned\
--   Deterministic\
--   Versioned\
--   Auditable\
--   Explainable
+- Business-aligned
+- Deterministic
+- Versioned
+- Auditable
+- Explainable
 
 It is designed to absorb frequent priority changes without losing rigor
 or credibility.
 
-------------------------------------------------------------------------
+---
 
 # Architecture Overview
 
 The system follows a layered, modular architecture:
 
-    Raw Data (CSV snapshots)
-        ↓
-    Signal Construction
-        ↓
-    Signal Gating (Thresholds)
-        ↓
-    Multi-Axis Scoring
-        ↓
-    Prioritization (Versioned Weights)
-        ↓
-    Deterministic Topic Selection
-        ↓
-    Decision Receipts
+Presto / Source Systems  
+        ↓  
+Extraction Layer (Versioned Raw Snapshots)  
+        ↓  
+Signal Construction  
+        ↓  
+Signal Gating (Thresholds)  
+        ↓  
+Multi-Axis Scoring  
+        ↓  
+Prioritization (Versioned Weights)  
+        ↓  
+Deterministic Topic Selection  
+        ↓  
+Decision Receipts  
 
 ## Core Design Principles
 
--   **Business outcomes beat behavioral purity**
--   **Determinism is a feature**
--   **Explainability is mandatory**
--   **Flexibility must be governed**
--   **Configuration lives inside the system**
--   **Learning is constrained and human-controlled**
+- Business outcomes beat behavioral purity
+- Determinism is a feature
+- Explainability is mandatory
+- Flexibility must be governed
+- Configuration lives inside the system
+- Learning is constrained and human-controlled
 
-------------------------------------------------------------------------
+---
 
 # Repository Structure
 
-    configs/
-      active.yaml                # Current configuration pointer
-      mappings/
-        source_catalog.yaml
-        metric_catalog.yaml
-        topic_map.yaml
-        benchmarks.yaml
-      thresholds/
-        signal_thresholds.yaml
-      priorities/
-        vYYYY_MM_DD_*.yaml
+```
+configs/
+  active.yaml
+  mappings/
+    source_catalog.yaml
+    metric_catalog.yaml
+    topic_map.yaml
+    benchmarks.yaml
+  thresholds/
+    signal_thresholds.yaml
+  priorities/
+    vYYYY_MM_DD_*.yaml
 
-    data/
-      raw/
-        weekly/<snapshot_id>/    # Immutable source drops
-      samples/
+data/
+  raw/
+    weekly/<snapshot_id>/      # Immutable raw snapshots
+    weekly/latest/             # Auto-maintained pointer
+  samples/
 
-    src/cde/
-      ingestion/
-      signals/
-      scoring/
-      prioritization/
-      engine/
-      simulation/
-      governance/
+extraction/
+  sql/
+  configs/
+  scripts/
 
-    outputs/
-      runs/<timestamp>/
+src/cde/
+  signals/
+  scoring/
+  prioritization/
+  engine/
+  simulation/
+  governance/
+  cli/
 
-------------------------------------------------------------------------
+outputs/
+  runs/<timestamp>/
+```
+
+---
 
 # Configuration Layers
 
 Each configuration file has a single responsibility.
 
-  -------------------------------------------------------------------------------
-  Layer                 File                       Purpose
-  --------------------- -------------------------- ------------------------------
-  Source ingestion      `source_catalog.yaml`      Defines dataset schemas +
-                                                   computation rules
-
-  Metric registry       `metric_catalog.yaml`      Canonical metric definitions +
-                                                   governance
-
-  Topic semantics       `topic_map.yaml`           Metric → coaching topic
-                                                   mapping
-
-  Benchmarks            `benchmarks.yaml`          Target/reference values
-
-  Signal gating         `signal_thresholds.yaml`   Eligibility rules
-
-  Business emphasis     `priorities/*.yaml`        Versioned weight
-                                                   configurations
-
-  Active pointer        `active.yaml`              Selects current config set
-  -------------------------------------------------------------------------------
+| Layer | File | Purpose |
+|-------|------|----------|
+| Source ingestion | source_catalog.yaml | Dataset schemas + signal computation rules |
+| Metric registry | metric_catalog.yaml | Canonical metric definitions |
+| Topic semantics | topic_map.yaml | Metric → coaching topic mapping |
+| Benchmarks | benchmarks.yaml | Target/reference values |
+| Signal gating | signal_thresholds.yaml | Eligibility rules |
+| Business emphasis | priorities/*.yaml | Versioned weight configurations |
+| Active pointer | active.yaml | Selects current config set |
 
 Only `priorities/` and `active.yaml` should change frequently.
 
-------------------------------------------------------------------------
+---
 
 # Data Model
 
 All sources are tall-skinny tables at this grain:
 
-    agent_id × week_start × call_type × metric_key
+agent_id × period × call_type × metric
 
-Required columns (per source schema):
+Required columns (canonical form):
 
--   `agent_id`
--   `week_start`
--   `call_type` (can be logically disabled)
--   `metric_key`
--   `numerator`
--   `denominator` (nullable for score metrics)
--   `calculation`
--   `value` (optional)
+- agent_id
+- period (week-ending date)
+- call_type
+- metric
+- numerator
+- denominator
+- calc
 
-Data is exported into:
+Raw snapshots are stored at:
 
-    data/raw/weekly/<snapshot_id>/
+```
+data/raw/weekly/<snapshot_id>/
+```
 
 Snapshots are immutable.
 
-------------------------------------------------------------------------
+The `latest/` folder is automatically maintained by the extraction pipeline.
 
-# Running the System
+---
 
-## 1. Generate Raw Snapshot
+# Extraction Layer
 
-Create a dated folder:
+The extraction layer:
 
-    data/raw/weekly/2026-02-16/
+- Compiles parameterized SQL
+- Executes via SQLAlchemy
+- Writes versioned raw CSV snapshots
+- Maintains a `latest/` pointer
+- Produces a manifest for auditability
 
-Export one CSV per source:
+## Output Location
 
-    agent_metrics.csv
-    behavior_scores.csv
-    expert_assist.csv
-    smart_offer.csv
+```
+data/raw/weekly/
+  <run_id>/
+  latest/
+```
 
-Optional but recommended:
+## Running Extraction
 
-    README.md
-    checksums.sha256
+From repo root:
 
-------------------------------------------------------------------------
+```bash
+python .\extraction\scripts\run_extract.py `
+  --config extraction/configs/extract_run.yaml
+```
 
-## 2. Run Extract (Optional Automation)
+This will:
 
-If using SQL extract automation:
+- Compile SQL templates
+- Execute queries
+- Write CSVs into `data/raw/weekly/<run_id>/`
+- Update `data/raw/weekly/latest/`
 
-    cde-run-extract \
-      --manifest queries/manifest.yaml \
-      --snapshot-id 2026-02-16 \
-      --out-dir data/raw/weekly/2026-02-16 \
-      --sqlalchemy-url "<connection-string>"
+Optional: compile only (for debugging):
 
-------------------------------------------------------------------------
+```bash
+python .\extraction\scripts\compile_sql.py `
+  --config extraction/configs/extract_run.yaml
+```
 
-## 3. Run Pipeline
+---
 
-    cde-run-pipeline \
-      --raw-dir data/raw/weekly/2026-02-16 \
-      --out-dir outputs/runs/2026-02-16_1530 \
-      --configs-dir configs
+# Running the Decision Pipeline
 
-Outputs:
+After extraction completes:
 
-    recommendations.csv
-    decision_receipts.jsonl
-    excluded_signals.csv
-    manifest.json
-    config_snapshot/
+```bash
+python -m cde.cli.run_pipeline `
+  --raw-dir data/raw/weekly/latest `
+  --out-dir outputs/runs/2026-03-03_TEST `
+  --configs-dir configs
+```
 
-------------------------------------------------------------------------
+## Outputs
+
+- recommendations.csv
+- decision_receipts.jsonl
+- excluded_signals.csv
+- scores.csv
+- eligible_signals.csv
+- manifest.json
+- config_snapshot/
+
+---
 
 # Decision Receipts
 
 Every recommendation includes:
 
--   Why this topic
--   Why now
--   Why not others
--   Excluded signals (with reason codes)
--   Config version
--   Data snapshot ID
--   Engine version
+- Why this topic
+- Why now
+- Why not others
+- Excluded signals (with reason codes)
+- Config version
+- Data snapshot ID
+- Engine version
 
 Receipts are stored as JSONL for auditability and downstream ingestion.
 
-------------------------------------------------------------------------
-
-# Call Type Handling
-
-Call types can be logically disabled without removing them from the data
-model.
-
-In `active.yaml`:
-
-``` yaml
-call_type_mode: disabled
-default_call_type: "all_calls"
-```
-
-This collapses segmentation while preserving future extensibility.
-
-------------------------------------------------------------------------
+---
 
 # Governance Model
 
--   Coaching Technology owns engine behavior.
--   Ops Leadership owns priorities.
--   Analytics supports validation and controlled discovery.
+- Coaching Technology owns engine behavior.
+- Ops Leadership owns priorities.
+- Analytics supports validation and controlled discovery.
+- Configuration changes are versioned and auditable.
+- Ungoverned overrides are considered system failure.
 
-Configuration changes are versioned and auditable.
+---
 
-Ungoverned overrides are considered system failure.
+# Appendix A — Troubleshooting & Diagnostics
 
-------------------------------------------------------------------------
+## 1. Verify Raw Snapshot Health
 
-# Current Status
+```bash
+python -c "import pandas as pd; df=pd.read_csv('data/raw/weekly/latest/agent_metrics.csv'); print(len(df)); print(df.head())"
+```
 
-This repository supports:
+Check calc health:
 
--   Multi-source tall-skinny ingestion
--   Deterministic signal computation
--   Configurable signal gating
--   Versioned priority weighting
--   Deterministic topic selection
--   Explainable decision receipts
--   Snapshot reproducibility
+```bash
+python -c "import pandas as pd; df=pd.read_csv('data/raw/weekly/latest/agent_metrics.csv'); print('calc null %', df['calc'].isna().mean()); print('den==0 %', (df['denominator']==0).mean())"
+```
 
-------------------------------------------------------------------------
+## 2. Verify Signal Inputs
 
-# Next Steps (Recommended)
+```bash
+python -c "import pandas as pd; df=pd.read_csv('outputs/runs/2026-03-03_TEST/eligible_signals.csv'); print(df[['metric','call_type','value','benchmark','gap']].head(20))"
+```
 
--   Add scenario simulation for priority sensitivity
--   Add unit tests enforcing deterministic behavior
--   Add data validation CLI for snapshot health checks
--   Integrate coaching history for dampening logic
+If benchmark is null everywhere → benchmark mapping failure.
 
-------------------------------------------------------------------------
+## 3. Verify Scores Are Not All Zero
+
+```bash
+python -c "import pandas as pd; df=pd.read_csv('outputs/runs/2026-03-03_TEST/scores.csv'); print(df['score_total'].describe()); print('nonzero:', (df['score_total']!=0).sum())"
+```
+
+If nonzero == 0:
+
+- Check benchmark lookup
+- Check call_type alignment
+- Check metric name casing
+
+## 4. Check Topic Mapping Coverage
+
+```bash
+python -c "import pandas as pd, yaml; scores=pd.read_csv('outputs/runs/2026-03-03_TEST/scores.csv'); cfg=yaml.safe_load(open('configs/active.yaml',encoding='utf-8')); tm=(cfg.get('topic_map') or {}); tm=tm.get('topic_map', tm); m2t=tm.get('metric_to_topic') or {}; print('unmapped metrics:', [m for m in scores['metric'].unique() if m not in m2t])"
+```
+
+If many metrics are unmapped → recommendations will be blank.
+
+## 5. Validate Period Alignment
+
+```bash
+python -c "import pandas as pd; df=pd.read_csv('data/raw/weekly/latest/agent_metrics.csv'); s=pd.to_datetime(df['period']); print(s.dt.day_name().value_counts())"
+```
+
+All weekly periods must align to the same weekday.
+
+## 6. Force-Fail on All-Zero Scores (Recommended Guardrail)
+
+Add after scoring:
+
+```python
+if scores["score_total"].max() == 0:
+    raise ValueError("All score_total values are zero. Check benchmark mapping and call_type alignment.")
+```
+
+---
+
+# Appendix B — Common Failure Modes
+
+| Symptom | Likely Cause | Fix |
+|---------|-------------|-----|
+| All scores = 0 | Benchmark mapping failure | Fix metric names / call_type alignment |
+| Blank recommendations | Topic map missing | Update topic_map.yaml |
+| Duplicate score rows | Join explosion | Fix upstream extraction grouping |
+| KeyError on metric | Column renamed | Canonicalize column names |
+| Trend always 0 | Period misalignment | Standardize week-ending period |
+
+---
+
+# Current System Capabilities
+
+- Versioned SQL extraction
+- Immutable raw snapshots
+- Deterministic signal computation
+- Configurable gating
+- Versioned priority weighting
+- Deterministic topic selection
+- Explainable receipts
+- Snapshot reproducibility
+
+---
 
 # Guiding Principle
 
-The system should not slow leaders down.\
+The system should not slow leaders down.  
 It should make fast decisions work on purpose.

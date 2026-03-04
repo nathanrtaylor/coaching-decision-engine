@@ -10,9 +10,17 @@ topic_map:
   metric_to_topic:
 
     # ===== Business outcomes
-    transfer_rate: "Reduce Transfer Rate"
+    transfer_rate: "Reduce Client Transfer Rate"
     resolution_rate: "Improve Resolution Rate"
     cancel_rate: "Reduce Cancel Rate"
+    one_call_resolution: "Improve One Call Resolution"
+    hold_time: "Reduce Hold Time"
+    talk_time: "Reduce Talk Time"
+    callback_rate: "Reduce Callback Rate"
+    erp: "Improve ERP"
+    expert_5star: "Improve Expert 5star"
+    nsp100: "Improve NSP100"
+    crt: "Reduce CRT"
 
     # ===== Tool usage
     guided_flow_adoption: "Increase Guided Flow Adoption"
@@ -31,6 +39,14 @@ topic_map:
     "Reduce Transfer Rate": "Performance Correction"
     "Improve Resolution Rate": "Performance Coaching"
     "Reduce Cancel Rate": "Performance Correction"
+    "Reduce Client Transfer Rate": "Performance Correction"
+    "Improve One Call Resolution": "Performance Coaching"
+    "Reduce Hold Time": "Performance Correction"
+    "Reduce Talk TIme": "Performance Coaching"
+    "Improve ERP": "Performance Coaching"
+    "Improve Expert 5star": "Performance Coaching"
+    "Improve NSP100": "Performance Coaching"
+    "Reduce CRT": "Performance Coaching"
 
     "Increase Guided Flow Adoption": "Tool Enablement"
     "Increase Expert Assist Usage": "Tool Enablement"

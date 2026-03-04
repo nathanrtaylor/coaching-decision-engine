@@ -15,6 +15,7 @@ from cde.engine.recommend import recommend_for_population
 from cde.engine.receipts import build_receipts
 from cde.simulation.exports import export_run_artifacts
 from cde.signals.thresholds import apply_signal_thresholds
+from cde.temporal.aggregate import aggregate_scores_window
 
 
 def main() -> None:
@@ -51,6 +52,25 @@ def main() -> None:
     eligible_signals.to_csv(out_dir / "eligible_signals.csv", index=False)
     excluded_signals.to_csv(out_dir / "excluded_signals.csv", index=False)
 
+    # --- Normalize period dtype for deterministic merges ---
+    import pandas as pd
+
+    eligible_signals["period"] = pd.to_datetime(
+        eligible_signals["period"], errors="coerce"
+    )
+
+    # excluded_signals can be empty (no exclusions). In that case pandas creates a df with no columns.
+    if excluded_signals is not None and not excluded_signals.empty:
+        # support either canonical 'period' or legacy 'week_ending'
+        if "period" not in excluded_signals.columns and "week_ending" in excluded_signals.columns:
+            excluded_signals = excluded_signals.rename(columns={"week_ending": "period"})
+
+        if "period" in excluded_signals.columns:
+            excluded_signals["period"] = pd.to_datetime(excluded_signals["period"], errors="coerce")
+    else:
+        # force a well-formed empty df with expected columns so downstream writes don't break
+        excluded_signals = pd.DataFrame(columns=["agent_id", "period", "call_type", "metric", "reason"])
+
     scores = assemble_scores(eligible_signals, config)
     scores.to_csv(out_dir / "scores.csv", index=False)
 
@@ -61,10 +81,38 @@ def main() -> None:
     if scores is None or (hasattr(scores, "empty") and scores.empty):
         raise RuntimeError("Scoring layer returned None or empty DataFrame. Check src/cde/scoring/assemble.py and individual score modules.")
     
-    candidates = build_topic_candidates(eligible_signals, scores, config)
+    # --- NEW: 8-week windowed aggregation for "next coaching" decision grain ---
+    windowed = aggregate_scores_window(eligible_signals=eligible_signals, config=config)
+    windowed.to_csv(out_dir / "scores_windowed_raw.csv", index=False)
+
+    # Build a "scores-like" table for downstream modules (candidate builder / receipts)
+    # - keep join keys aligned
+    # - provide score_* columns the engine expects
+    scores_windowed = windowed.rename(columns={
+        "level_8w": "score_level",
+        "trend_8w": "score_trend",
+        "confidence_8w": "score_confidence",
+        # proxy: treat volatility as a risk signal for now (good enough for a first pass)
+        "volatility_8w": "score_risk",
+    }).copy()
+
+    # Many downstream joins expect a 'period' column; set it to the window_end (latest week in the window)
+    scores_windowed["period"] = scores_windowed["window_end"]
+
+    # If downstream expects score_total, compute a deterministic placeholder
+    # (You can replace this later with a more principled composition.)
+    scores_windowed["score_total"] = (
+        scores_windowed["score_level"].fillna(0.0)
+        + scores_windowed["score_trend"].fillna(0.0)
+        + scores_windowed["score_risk"].fillna(0.0)
+    ) * scores_windowed["score_confidence"].fillna(0.0)
+
+    scores_windowed.to_csv(out_dir / "scores_windowed.csv", index=False)
+
+    candidates = build_topic_candidates(eligible_signals, scores_windowed, config)
     recs = recommend_for_population(candidates, config)
 
-    receipts = build_receipts(recs, candidates, eligible_signals, scores, config, excluded_signals=excluded_signals)
+    receipts = build_receipts(recs, candidates, eligible_signals, scores_windowed, config, excluded_signals=excluded_signals)
     export_run_artifacts(out_dir, auditor, recs, receipts, config, excluded_signals=excluded_signals)
 
     auditor.finish_run()

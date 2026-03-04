@@ -29,9 +29,9 @@ priorities: priorities/v2026_02_16_baseline.yaml
 # ---------------------------------------------------
 
 data_snapshot:
-  mode: explicit          # explicit | latest
+  mode: latest          # explicit | latest
   root: data/raw/weekly
-  snapshot_id: 2026-02-20
+  snapshot_id: 2026-03-03_TEST
   expected_sources:
     - agents
     - agent_metrics
