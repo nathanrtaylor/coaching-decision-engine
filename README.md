@@ -101,9 +101,11 @@ Each configuration file has a single responsibility.
 | Benchmarks | benchmarks.yaml | Target/reference values |
 | Signal gating | signal_thresholds.yaml | Eligibility rules |
 | Business emphasis | priorities/*.yaml | Versioned weight configurations |
-| Active pointer | active.yaml | Selects current config set |
+| Active pointer | active.yaml | Selects current config set; may include `data_snapshot` (raw path resolution and default `required_tables` from `expected_sources`) |
 
 Only `priorities/` and `active.yaml` should change frequently.
+
+`conversation_types.by_topic` in `active.yaml` overrides `topic_map.topic_to_conversation_type` for matching topic strings; otherwise the topic map supplies defaults.
 
 ---
 
@@ -169,6 +171,8 @@ This will:
 - Write CSVs into `data/raw/weekly/<run_id>/`
 - Update `data/raw/weekly/latest/`
 
+For `agent_metrics`, the metric list in SQL is filled from `configs/mappings/metric_catalog.yaml` when `metrics_from_catalog` is set in the extraction YAML (so extraction stays aligned with the decision catalog).
+
 Optional: compile only (for debugging):
 
 ```bash
@@ -184,20 +188,23 @@ After extraction completes:
 
 ```bash
 python -m cde.cli.run_pipeline `
-  --raw-dir data/raw/weekly/latest `
   --out-dir outputs/runs/2026-03-03_TEST `
   --configs-dir configs
 ```
+
+`--raw-dir` is optional when `data_snapshot` is set in `configs/active.yaml`: with `mode: latest` the engine reads `<root>/latest`; with `mode: explicit` it uses `<root>/<snapshot_id>`. You can still pass `--raw-dir` to override.
 
 ## Outputs
 
 - recommendations.csv
 - decision_receipts.jsonl
 - excluded_signals.csv
-- scores.csv
+- scores_windowed.csv (primary score table used for topic candidates)
 - eligible_signals.csv
 - manifest.json
 - config_snapshot/
+
+Optional: add `--write-point-in-time-scores` to also write `scores.csv` (per-period scores before windowing; useful for diagnostics).
 
 ---
 
@@ -252,7 +259,7 @@ If benchmark is null everywhere → benchmark mapping failure.
 ## 3. Verify Scores Are Not All Zero
 
 ```bash
-python -c "import pandas as pd; df=pd.read_csv('outputs/runs/2026-03-03_TEST/scores.csv'); print(df['score_total'].describe()); print('nonzero:', (df['score_total']!=0).sum())"
+python -c "import pandas as pd; df=pd.read_csv('outputs/runs/2026-03-03_TEST/scores_windowed.csv'); print(df['score_total'].describe()); print('nonzero:', (df['score_total']!=0).sum())"
 ```
 
 If nonzero == 0:
@@ -264,7 +271,7 @@ If nonzero == 0:
 ## 4. Check Topic Mapping Coverage
 
 ```bash
-python -c "import pandas as pd, yaml; scores=pd.read_csv('outputs/runs/2026-03-03_TEST/scores.csv'); cfg=yaml.safe_load(open('configs/active.yaml',encoding='utf-8')); tm=(cfg.get('topic_map') or {}); tm=tm.get('topic_map', tm); m2t=tm.get('metric_to_topic') or {}; print('unmapped metrics:', [m for m in scores['metric'].unique() if m not in m2t])"
+python -c "import pandas as pd, yaml; scores=pd.read_csv('outputs/runs/2026-03-03_TEST/scores_windowed.csv'); cfg=yaml.safe_load(open('configs/active.yaml',encoding='utf-8')); tm=(cfg.get('topic_map') or {}); tm=tm.get('topic_map', tm); m2t=tm.get('metric_to_topic') or {}; print('unmapped metrics:', [m for m in scores['metric'].unique() if m not in m2t])"
 ```
 
 If many metrics are unmapped → recommendations will be blank.

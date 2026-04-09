@@ -41,18 +41,8 @@ outputs:
       - calc
     params:
       source_table: "expert_performance_metrics"
-      metrics:
-        - "nsp100"
-        - "crt"
-        - "client transfers"
-        - "erp"
-        - "expert 5star"
-        - "cancellation rate"
-        - "hold time"
-        - "talk time"
-        - "callback_rate"
-        - "ocr"
-        - "resolution rate"  
+      # Populated at compile/run time from metric_catalog (source: agent_metrics).
+      metrics_from_catalog: configs/mappings/metric_catalog.yaml
 
       # keep overrides here only if you ever turn it on
       # calendar_schema: "hive.care"

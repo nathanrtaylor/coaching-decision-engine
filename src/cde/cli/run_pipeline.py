@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 
 from cde.governance.audit import RunAuditor
-from cde.governance.versioning import resolve_active_config
+from cde.governance.versioning import resolve_active_config, resolve_raw_export_dir
 from cde.ingestion.extract import load_raw_exports
 from cde.ingestion.normalize import normalize_inputs
 from cde.ingestion.validate import validate_inputs
@@ -20,18 +20,29 @@ from cde.temporal.aggregate import aggregate_scores_window
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run end-to-end Coaching Decision Engine pipeline.")
-    parser.add_argument("--raw-dir", type=str, required=True, help="Path to a raw export folder (e.g., data/raw/weekly/2026-02-16)")
+    parser.add_argument(
+        "--raw-dir",
+        type=str,
+        default=None,
+        help="Raw export folder (e.g. data/raw/weekly/2026-02-16). "
+        "If omitted, resolved from data_snapshot in configs/active.yaml.",
+    )
     parser.add_argument("--out-dir", type=str, required=True, help="Path to outputs/runs/<timestamp> folder to write artifacts")
     parser.add_argument("--configs-dir", type=str, default="configs", help="Path to configs directory")
     parser.add_argument("--run-id", type=str, default=None, help="Optional run id (otherwise derived by auditor)")
+    parser.add_argument(
+        "--write-point-in-time-scores",
+        action="store_true",
+        help="Write scores.csv (per-period point-in-time scores). Recommendations use scores_windowed.csv only.",
+    )
     args = parser.parse_args()
 
-    raw_dir = Path(args.raw_dir)
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     configs_dir = Path(args.configs_dir)
 
     config = resolve_active_config(configs_dir)
+    raw_dir = Path(args.raw_dir) if args.raw_dir else resolve_raw_export_dir(configs_dir, config)
 
     auditor = RunAuditor(out_dir=out_dir, run_id=args.run_id)
     auditor.start_run()
@@ -72,7 +83,8 @@ def main() -> None:
         excluded_signals = pd.DataFrame(columns=["agent_id", "period", "call_type", "metric", "reason"])
 
     scores = assemble_scores(eligible_signals, config)
-    scores.to_csv(out_dir / "scores.csv", index=False)
+    if args.write_point_in_time_scores:
+        scores.to_csv(out_dir / "scores.csv", index=False)
 
     print("eligible_signals rows:", len(eligible_signals))
     print("scores rows:", 0 if scores is None else len(scores))

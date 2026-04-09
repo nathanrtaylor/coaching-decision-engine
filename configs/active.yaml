@@ -86,7 +86,7 @@ explainability:
 tie_breakers:
   # topic_order can be omitted; engine will sort lexicographically for final stability
   topic_order:
-    - "Reduce Transfer Rate"
+    - "Reduce Client Transfer Rate"
     - "Improve Resolution Rate"
     - "Reduce Cancel Rate"
     - "Increase Guided Flow Adoption"
@@ -95,12 +95,12 @@ tie_breakers:
     - "Strengthen Empathy Statements"
     - "Use Clear Transition Statements"
 
-# Conversation types can be overridden by topic_map.topic_to_conversation_type,
-# but having a deterministic default here is useful.
+# conversation_types.by_topic overrides topic_map.topic_to_conversation_type for those keys;
+# other topics use the topic map, then conversation_types.default.
 conversation_types:
   default: "Performance Coaching"
   by_topic:
-    "Reduce Transfer Rate": "Performance Correction"
+    "Reduce Client Transfer Rate": "Performance Correction"
     "Reduce Cancel Rate": "Performance Correction"
     "Increase Guided Flow Adoption": "Tool Enablement"
     "Increase Expert Assist Usage": "Tool Enablement"
