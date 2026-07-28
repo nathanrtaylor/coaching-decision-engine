@@ -16,7 +16,7 @@ benchmarks:
   erp:
     default: 90        # scale-corrected: was 0.8; erp is a 0-100 score (Ops: confirm target)
   one_call_resolution:
-    default: 0.2
+    default: 0.80      # recalibrated: was 0.2 (flagged 0% - too lenient). 80% first-call resolution ~ just above median.
   hold_time:
     default: 50
   talk_time:
@@ -26,7 +26,7 @@ benchmarks:
   expert_5star:
     default: 4.5       # scale-corrected: was 0.8; expert_5star is a 1-5 star rating (Ops: confirm target)
   nsp100:
-    default: 1         # REVIEW(Ops): observed values ~0-0.08; benchmark 1.0 flags everyone. Clarify metric units.
+    default: 0.03      # scale-corrected: was 1.0. Value is net sales PER CALL (not per 100); 0.03 = ~3 sales/100 calls (~p67).
   crt:
     default: 1200      # scale-corrected: was 800; crt is in seconds (Ops: confirm target)
   resolution_rate:
