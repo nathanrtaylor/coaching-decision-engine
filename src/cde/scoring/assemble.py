@@ -188,7 +188,7 @@ def compute_windowed_scores(windowed: pd.DataFrame, config: Dict[str, Any]) -> p
 
     diagnostics = [
         c
-        for c in ["window_start", "window_end", "weeks_present", "level_8w", "trend_8w",
+        for c in ["window_start", "window_end", "weeks_present", "denom_8w", "level_8w", "trend_8w",
                   "volatility_8w", "benchmark_8w", "direction", "recency_shift"]
         if c in scored.columns
     ]
