@@ -138,6 +138,22 @@ def main() -> None:
     receipts = build_receipts(recs, candidates, eligible_signals, scores_windowed, config, excluded_signals=excluded_signals)
     export_run_artifacts(out_dir, auditor, recs, receipts, config, excluded_signals=excluded_signals)
 
+    # HTML summary dashboard (standard output package). Non-fatal: a dashboard error must not fail the run.
+    try:
+        from cde.reporting.dashboard import write_dashboard
+
+        write_dashboard(
+            out_dir / "dashboard.html",
+            recommendations=recs,
+            signals=signals,  # full built signals: carries benchmark, gap, direction
+            config=config,
+            excluded_signals=excluded_signals,
+            candidates=candidates,
+            agents=normalized.get("agents"),  # primary source for icp_client / mascot splits
+        )
+    except Exception as e:  # noqa: BLE001
+        print(f"WARNING: dashboard generation failed: {e!r}")
+
     auditor.finish_run()
     print(f"Done. Wrote outputs to: {out_dir}")
 
