@@ -21,13 +21,35 @@ coaching_history_map:
     - Excused
 
   # behavior_selected  ->  engine topic (see mappings/topic_map.yaml for valid topics)
+  # High-confidence mappings against the observed coaching vocabulary. Behaviors with no
+  # corresponding engine topic (e.g. "Discovery Questions") are intentionally omitted and simply
+  # do not dampen. Ambiguous behaviors are listed under TODO(Ops) below for governance sign-off.
+  # Matching is case-insensitive (see ingestion/coaching_history.py), so casing variants like
+  # "Transition statement" resolve to the same entry.
   behavior_to_topic:
-    "Increased Transfer Rate": "Reduce Client Transfer Rate"
+    "One Call Resolution": "Improve One Call Resolution"
+    "OCR Improvement": "Improve One Call Resolution"
+    "Resolution": "Improve Resolution Rate"
+    "Resolutions": "Improve Resolution Rate"
+    "Smart Offer Adherence": "Improve Smart Offer Adoption"
+    "Quality Sales - Smart Offer": "Improve Smart Offer Adoption"
+    "Make an Offer": "Improve Smart Offer Adoption"
+    "Show Compassion": "Strengthen Empathy Statements"
     "Transition Statement": "Use Clear Transition Statements"
+    "Increased Transfer Rate": "Reduce Client Transfer Rate"
+    "Transfers": "Reduce Client Transfer Rate"
+    "Cancel Rate Reduction": "Reduce Cancel Rate"
+    "Talk Time": "Reduce Talk Time"
+    "AHT Talk Time": "Reduce Talk Time"
+    "Hold Time": "Reduce Hold Time"
+    "AHT Hold Time": "Reduce Hold Time"
+    "ERP": "Improve ERP"
 
-    # --- TODO(Ops): confirm and extend from observed behaviors (currently unmapped => no dampening) ---
-    # "Ownership": "Strengthen Empathy Statements"
-    # "Make an Offer": "Improve Smart Offer Adoption"
-    # "Trust Building": "Strengthen Empathy Statements"
-    # "Sales Confidence": "Improve NSP100"
-    # "In Warranty SUR": "Improve Smart Offer Adoption"
+    # --- TODO(Ops): ambiguous behaviors — confirm intended engine topic (currently no dampening) ---
+    # "Quality Sales": ?                 # sales-oriented; -> "Improve NSP100"?
+    # "Efficient Experience": ?          # efficiency; -> Reduce Talk Time / Hold Time / CRT?
+    # "Product Value Reinforcement": ?   # sales; -> "Improve NSP100"?
+    # "Ask for the Sale": ?              # sales; -> "Improve NSP100"?
+    # "Tool Utilization": ?             # -> "Increase Guided Flow Adoption" or "Increase Expert Assist Usage"?
+    # "Drive Results": ?                 # generic
+    # NOTE: "Absent" / "Late Arrival" are attendance, not coaching topics -> leave unmapped.

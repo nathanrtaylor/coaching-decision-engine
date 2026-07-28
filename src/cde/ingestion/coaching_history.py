@@ -53,9 +53,10 @@ def build_coaching_history(
         )
         return None
 
-    # 2) map behavior -> topic (log unmapped; they don't dampen)
+    # 2) map behavior -> topic (case-insensitive; log unmapped; they don't dampen)
+    norm_map = {str(k).strip().casefold(): v for k, v in behavior_to_topic.items()}
     subject = df[map_key].astype(str).str.strip()
-    df["topic"] = subject.map(behavior_to_topic)
+    df["topic"] = subject.str.casefold().map(norm_map)
     unmapped = sorted(subject[df["topic"].isna()].dropna().unique().tolist())
     if unmapped:
         log.warning(

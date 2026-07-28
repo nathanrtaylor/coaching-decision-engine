@@ -43,6 +43,16 @@ def test_missing_table_returns_none():
     assert build_coaching_history({}, CFG) is None
 
 
+def test_mapping_is_case_insensitive():
+    raw = pd.DataFrame([
+        {"agent_id": "1", "period": "2026-06-12", "coaching_status": "Submitted",
+         "behavior_selected": "increased TRANSFER rate"},  # casing differs from crosswalk key
+    ])
+    hist = build_coaching_history({"coaching_history": raw}, CFG)
+    assert hist is not None and len(hist) == 1
+    assert hist.iloc[0]["topic"] == "Reduce Client Transfer Rate"
+
+
 def test_all_unmapped_returns_none():
     raw = pd.DataFrame([
         {"agent_id": "1", "period": "2026-06-12", "coaching_status": "Submitted",
