@@ -201,6 +201,10 @@ def build_signals(normalized: Dict[str, pd.DataFrame], config: Dict[str, Any]) -
         out["calculation"] = df[calc_col] if calc_col and calc_col in df.columns else None
         out["value_raw"] = pd.to_numeric(df[val_col], errors="coerce") if val_col and val_col in df.columns else np.nan
 
+        # Carry cohort (icp_client) from the source when present (agent_metrics has it per row);
+        # this gives full coverage for per-cohort benchmark lookup (the agents-table join is sparse).
+        out["icp_client"] = df["icp_client"] if "icp_client" in df.columns else np.nan
+
         frames.append(out)
 
     if not frames:
@@ -230,8 +234,13 @@ def build_signals(normalized: Dict[str, pd.DataFrame], config: Dict[str, Any]) -
         base = base.merge(
             agents[["agent_id", "period", "mascot", "icp_client", "coach", "coach_id"]],
             on=["agent_id", "period"],
-            how="left"
+            how="left",
+            suffixes=("", "_agt"),
         )
+        # Prefer the source icp_client (full coverage); fall back to the agents table where missing.
+        if "icp_client_agt" in base.columns:
+            base["icp_client"] = base["icp_client"].fillna(base["icp_client_agt"])
+            base = base.drop(columns=["icp_client_agt"])
 
 
     # Map to canonical metric names
@@ -309,10 +318,20 @@ def build_signals(normalized: Dict[str, pd.DataFrame], config: Dict[str, Any]) -
         .reset_index(level=[0, 1, 2], drop=True)
     )
 
-    # Benchmark + gap (benchmarks are looked up by benchmark_key; call_type is collapsed if disabled)
+    # Normalize cohort casing (source uses 'MOB-AT&T', agents table 'mob-at&t') so per-cohort
+    # benchmark keys, signals, and the dashboard all align on one lowercase form.
+    if "icp_client" not in base.columns:
+        base["icp_client"] = np.nan
+    base["icp_client"] = (
+        base["icp_client"].astype("string").str.strip().str.lower().replace({"": pd.NA})
+    )
+
+    # Benchmark + gap: per-cohort (icp_client) first, then call_type, then default.
     base["benchmark"] = [
-        get_benchmark_value(bkey, ct, config)
-        for bkey, ct in zip(base["benchmark_key"].tolist(), base["call_type"].tolist())
+        get_benchmark_value(bkey, ct, config, icp_client=icp)
+        for bkey, ct, icp in zip(
+            base["benchmark_key"].tolist(), base["call_type"].tolist(), base["icp_client"].tolist()
+        )
     ]
     base["gap"] = [
         benchmark_gap(v, b) if v is not None and (b is not None) else None
