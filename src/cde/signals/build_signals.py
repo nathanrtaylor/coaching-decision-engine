@@ -69,6 +69,9 @@ def _compute_value_row(
         return raw_value  # last resort
 
     calc = str(calc).strip().lower()
+    # normalize calc-name drift: metric_catalog uses "average", source handlers use "avg"
+    if calc == "average":
+        calc = "avg"
     handler = handlers.get(calc) or {}
 
     # supported patterns: rate/avg = numerator/denominator; sum/count/score = numerator
@@ -175,7 +178,7 @@ def build_signals(normalized: Dict[str, pd.DataFrame], config: Dict[str, Any]) -
             out["period"] = df["week_start"]
         else:
             raise KeyError(
-                f"build_signals: period column not found for source '{name}'. "
+                f"build_signals: period column not found for source '{source_name}'. "
                 f"Looked for 'period', '{period_col}', 'week_ending', 'week_start'. "
                 f"Available columns: {list(df.columns)}"
         )

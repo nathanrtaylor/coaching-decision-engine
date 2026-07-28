@@ -11,6 +11,7 @@ mappings:
   metric_catalog: mappings/metric_catalog.yaml
   topic_map: mappings/topic_map.yaml
   benchmarks: mappings/benchmarks.yaml
+  coaching_history_map: mappings/coaching_history_map.yaml
 
 # ---------------------------------------------------
 # Signal Gating
@@ -29,10 +30,10 @@ priorities: priorities/v2026_02_16_baseline.yaml
 # ---------------------------------------------------
 
 data_snapshot:
-  mode: latest          # explicit | latest
+  mode: latest          # explicit | latest  (latest reads <root>/latest; snapshot_id used only for explicit)
   root: data/raw/weekly
-  snapshot_id: 2026-03-03_TEST
-  expected_sources:
+  snapshot_id: 2026-06-18_weekly_wk8   # used only when mode: explicit
+  expected_sources:     # required tables; coaching_history is intentionally NOT here (optional input)
     - agents
     - agent_metrics
     - behavior_scores
@@ -71,8 +72,8 @@ eligibility:
   min_confidence: 0.55
 
 dampening:
-  mode: suppress
-  periods: 2
+  mode: multiply        # multiply | suppress. multiply keeps recently-coached topics in
+  periods: 2            # contention at reduced weight so a severe gap can still win.
   multiplier: 0.5
 
 # ---------------------------------------------------
@@ -112,5 +113,5 @@ conversation_types:
 
 meta:
   version: v2026_02_16_baseline
-  data_snapshot: 2026-02-16
+  data_snapshot: auto   # stamped at runtime from the resolved snapshot (see cli/run_pipeline.py)
   engine_version: 0.1.0

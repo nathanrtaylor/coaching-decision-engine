@@ -113,6 +113,8 @@ def aggregate_scores_window(
         "trend_8w",
         "volatility_8w",
         "confidence_8w",
+        "benchmark_8w",
+        "direction",
     ]
 
     # Return empty with expected schema
@@ -241,6 +243,20 @@ def aggregate_scores_window(
         else:
             confidence_8w = float(coverage)
 
+        # --- benchmark (mean of finite benchmarks in window; constant per metric in practice)
+        if "benchmark" in g.columns:
+            bvals = pd.to_numeric(g["benchmark"], errors="coerce").values
+            bvals = bvals[np.isfinite(bvals)]
+            benchmark_8w = float(bvals.mean()) if bvals.size else float("nan")
+        else:
+            benchmark_8w = float("nan")
+
+        # --- direction (constant per metric; carried so scoring can be direction-aware)
+        if "direction" in g.columns and g["direction"].notna().any():
+            direction = str(g["direction"].dropna().iloc[0])
+        else:
+            direction = "higher_is_better"
+
         out = {
             "window_start": window_start,
             "window_end": window_end,
@@ -249,6 +265,8 @@ def aggregate_scores_window(
             "trend_8w": trend_8w,
             "volatility_8w": volatility_8w,
             "confidence_8w": confidence_8w,
+            "benchmark_8w": benchmark_8w,
+            "direction": direction,
         }
 
         if include_recency:

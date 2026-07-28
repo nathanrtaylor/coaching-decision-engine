@@ -98,6 +98,7 @@ Each configuration file has a single responsibility.
 | Source ingestion | source_catalog.yaml | Dataset schemas + signal computation rules |
 | Metric registry | metric_catalog.yaml | Canonical metric definitions |
 | Topic semantics | topic_map.yaml | Metric → coaching topic mapping |
+| Coaching history | coaching_history_map.yaml | Coaching behavior → topic crosswalk (for dampening) |
 | Benchmarks | benchmarks.yaml | Target/reference values |
 | Signal gating | signal_thresholds.yaml | Eligibility rules |
 | Business emphasis | priorities/*.yaml | Versioned weight configurations |
@@ -200,11 +201,39 @@ python -m cde.cli.run_pipeline `
 - decision_receipts.jsonl
 - excluded_signals.csv
 - scores_windowed.csv (primary score table used for topic candidates)
+- scores_windowed_raw.csv (raw 8-week aggregates before scoring; diagnostic)
 - eligible_signals.csv
+- signals.csv (all built signals before gating; diagnostic)
+- topic_candidates.csv (per-agent topic candidates after weighting + dampening; diagnostic)
 - manifest.json
 - config_snapshot/
 
 Optional: add `--write-point-in-time-scores` to also write `scores.csv` (per-period scores before windowing; useful for diagnostics).
+
+## Scoring Model (how a topic is chosen)
+
+Scoring is a single, direction-aware, deterministic composition (in `src/cde/scoring/assemble.py`):
+
+- **Deficit, not distance.** Each metric's `direction` (from `metric_catalog.yaml`) decides which way
+  is "bad". Only underperformance vs benchmark scores; a strength scores ~0, so the engine never
+  recommends coaching something an agent is already good at. Deficits are normalized by the benchmark
+  so metrics on different scales are comparable.
+- **Axes:** `score_level` (deficit magnitude), `score_trend` (worsening over the window),
+  `score_confidence` (window coverage), `score_risk = level x (1 - confidence)`.
+- **Composition:** `score_total = w_level*level + w_trend*trend + w_risk*risk` using `priority_model`
+  weights in `active.yaml`. Prioritization then scales this by the **versioned** business weight for the
+  metric's category (`priorities/*.yaml`). Only metrics flagged `eligible_for_prioritization` can drive
+  a recommendation.
+
+## Recency Dampening
+
+To prevent coaching whiplash, a topic coached recently is dampened. Coaching history is extracted from
+`l2_asurion_coachdb_coachdb_helixcoaching` into `coaching_history.csv` (optional input) and mapped to
+engine topics via the governed crosswalk `configs/mappings/coaching_history_map.yaml`
+(`behavior_selected -> topic`). A candidate is dampened when the same agent+topic was coached within
+`dampening.periods` weeks of the decision period. With `dampening.mode: multiply` the topic's
+`priority_score` is scaled by `dampening.multiplier` (kept in contention); with `suppress` it is removed.
+If no `coaching_history.csv` is present, dampening is a no-op.
 
 ---
 

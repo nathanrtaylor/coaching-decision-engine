@@ -1,0 +1,33 @@
+# configs/mappings/coaching_history_map.yaml
+#
+# Governed crosswalk: coaching-history behavior -> engine coaching topic.
+# Used to align delivered coaching (from l2_asurion_coachdb_coachdb_helixcoaching) with the
+# engine's topic taxonomy so recently-coached topics can be dampened (soft-suppressed).
+#
+# GOVERNANCE: Coaching Technology + Ops own this file. Topic strings on the right MUST match
+# the topics in mappings/topic_map.yaml. Only confidently-known behaviors are seeded here;
+# any behavior_selected value not present is logged at runtime and simply does NOT dampen
+# (safe default). Complete this crosswalk from the runtime "unmapped behavior_selected" log.
+
+coaching_history_map:
+
+  # Which coaching-history column names the coached subject (locked decision: behavior_selected).
+  map_key: behavior_selected
+
+  # Coaching statuses that count as "coached" (locked decision: Submitted + Excused).
+  # Also enforced at extraction; kept here so normalization is self-contained/testable.
+  count_status:
+    - Submitted
+    - Excused
+
+  # behavior_selected  ->  engine topic (see mappings/topic_map.yaml for valid topics)
+  behavior_to_topic:
+    "Increased Transfer Rate": "Reduce Client Transfer Rate"
+    "Transition Statement": "Use Clear Transition Statements"
+
+    # --- TODO(Ops): confirm and extend from observed behaviors (currently unmapped => no dampening) ---
+    # "Ownership": "Strengthen Empathy Statements"
+    # "Make an Offer": "Improve Smart Offer Adoption"
+    # "Trust Building": "Strengthen Empathy Statements"
+    # "Sales Confidence": "Improve NSP100"
+    # "In Warranty SUR": "Improve Smart Offer Adoption"

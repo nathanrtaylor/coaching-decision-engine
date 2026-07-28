@@ -1,60 +1,37 @@
-# Optional: benchmarks can live here or in a separate file.
-# If you prefer a separate file, add it under mappings and load it similarly.
+# Benchmarks (reference/target values) per metric.
+#
+# Keyed by metric benchmark key -> default, with optional per-call-type overrides. Overrides are
+# only consulted when call_type_mode is enabled (currently disabled in active.yaml). Values must be
+# on the SAME scale/unit as the extracted metric value (calc). A benchmark that sits at an extreme
+# percentile of the observed data is flagged at runtime by scoring/assemble._warn_benchmark_outliers.
+#
+# NOTE: values marked "scale-corrected" below were unit-mismatched and have been put back on the
+# right scale as plausible placeholders. Ops should confirm the true business target for each.
 
 benchmarks:
   transfer_rate:
     default: 0.12
-    by_call_type:
-      claims: 0.10
-      tech_support: 0.14
   cancel_rate:
     default: 0.12
-    by_call_type:
-      claims: 0.10
-      tech_support: 0.14  
   erp:
-    default: 0.8
-    by_call_type:
-      claims: 0.10
-      tech_support: 0.14  
+    default: 90        # scale-corrected: was 0.8; erp is a 0-100 score (Ops: confirm target)
   one_call_resolution:
     default: 0.2
-    by_call_type:
-      claims: 0.10
-      tech_support: 0.14 
   hold_time:
     default: 50
-    by_call_type:
-      claims: 0.10
-      tech_support: 0.14 
   talk_time:
-    default: 50
-    by_call_type:
-      claims: 0.10
-      tech_support: 0.14 
+    default: 900       # scale-corrected: was 50; talk_time is in seconds (Ops: confirm target)
   callback_rate:
     default: 0.1
-    by_call_type:
-      claims: 0.10
-      tech_support: 0.14 
   expert_5star:
-    default: 0.8
-    by_call_type:
-      claims: 0.10
-      tech_support: 0.14
+    default: 4.5       # scale-corrected: was 0.8; expert_5star is a 1-5 star rating (Ops: confirm target)
   nsp100:
-    default: 1
-    by_call_type:
-      claims: 0.10
-      tech_support: 0.14 
+    default: 1         # REVIEW(Ops): observed values ~0-0.08; benchmark 1.0 flags everyone. Clarify metric units.
   crt:
-    default: 800
-    by_call_type:
-      claims: 0.10
-      tech_support: 0.14                                    
+    default: 1200      # scale-corrected: was 800; crt is in seconds (Ops: confirm target)
   resolution_rate:
     default: 0.78
-    by_call_type:
+    by_call_type:      # the one real per-call-type benchmark set (used only if call_type_mode enabled)
       claims: 0.80
       tech_support: 0.75
   guided_flow_adoption:
