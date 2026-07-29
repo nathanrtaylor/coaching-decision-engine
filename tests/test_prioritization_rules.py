@@ -1,5 +1,6 @@
 """Versioned weight resolution + governance enforcement (src/cde/prioritization)."""
 import pandas as pd
+import pytest
 
 from cde.prioritization.weights import get_metric_weight
 from cde.prioritization.apply import build_topic_candidates
@@ -54,6 +55,21 @@ def test_priority_score_is_nonzero_after_weight_fix():
     tr = cands[cands["topic"] == "Reduce Client Transfer Rate"]
     assert not tr.empty
     assert float(tr["priority_score"].iloc[0]) > 0  # 0.25 * 1.0 * 1.0
+
+
+def test_evidence_from_window_aggregates_when_pointintime_missing():
+    # Agent has window aggregates (level_8w/benchmark_8w) but NO point-in-time row at window_end.
+    # Evidence must still populate from the window averages (not blank).
+    scores = _scores().copy()
+    scores["level_8w"] = [0.06, 0.90]        # mean gap over window
+    scores["benchmark_8w"] = [0.12, 0.50]
+    scores["direction"] = ["lower_is_better", "higher_is_better"]
+    signals = pd.DataFrame(columns=["agent_id", "period", "call_type", "metric"])  # nothing to join
+    cands = build_topic_candidates(signals, scores, CFG)
+    tr = cands[cands["topic"] == "Reduce Client Transfer Rate"].iloc[0]
+    assert tr["benchmark"] == 0.12
+    assert tr["gap"] == pytest.approx(0.06)
+    assert tr["value"] == pytest.approx(0.18)   # benchmark + gap
 
 
 def test_ineligible_metric_is_dropped_from_prioritization():

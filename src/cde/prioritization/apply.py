@@ -109,20 +109,27 @@ def build_topic_candidates(signals: pd.DataFrame, scores: pd.DataFrame, config: 
     _require_cols(scores, ["score_total"], "scores")  # build_signals should output score_total
     _require_cols(signals, ["agent_id", "period", "call_type", "metric"], "signals")
 
-    # Join scores with key signal evidence IF present.
-    evidence_cols = ["value", "benchmark", "gap", "direction"]
-    available_evidence = [c for c in evidence_cols if c in signals.columns]
-    join_cols = ["agent_id", "period", "call_type", "metric"]
-
-    if available_evidence:
-        df = scores.merge(
-            signals[join_cols + available_evidence],
-            on=join_cols,
-            how="left",
-        )
-    else:
-        # still produce a df; just without evidence
+    # Evidence (value/benchmark/gap) shown for the recommendation comes from the 8-WEEK WINDOW
+    # aggregates, which are populated for every scored agent. A point-in-time join on window_end
+    # instead leaves blanks for any agent missing that exact final week (common with weekly
+    # reporting gaps), even though the decision itself is window-based. Window-average evidence is
+    # both always-present and faithful to how the score was computed.
+    if {"level_8w", "benchmark_8w"}.issubset(scores.columns):
         df = scores.copy()
+        df["benchmark"] = pd.to_numeric(df["benchmark_8w"], errors="coerce")
+        df["gap"] = pd.to_numeric(df["level_8w"], errors="coerce")     # mean signed gap over window
+        df["value"] = df["benchmark"] + df["gap"]                       # implied mean value
+        if "direction" not in df.columns:
+            df["direction"] = None
+    else:
+        # Legacy fallback: point-in-time evidence join (used when window aggregates aren't present).
+        evidence_cols = ["value", "benchmark", "gap", "direction"]
+        available_evidence = [c for c in evidence_cols if c in signals.columns]
+        join_cols = ["agent_id", "period", "call_type", "metric"]
+        if available_evidence:
+            df = scores.merge(signals[join_cols + available_evidence], on=join_cols, how="left")
+        else:
+            df = scores.copy()
 
     # Backward/forward compatible score column naming
     rename_map = {
