@@ -76,6 +76,51 @@ benchmarks:
   expert_5star:
     default: 4.5        # 1-5 scale; uniform across cohorts at 5.0 (ceiling) -> absolute sub-max target.
 
+  # ---- quality behaviors (AI-scored pass-RATES, value = calc 0-1): bottom-quartile floor ----
+  # Anchored at each behavior's p25 of the WINDOWED-mean pass-rate (the grain the engine scores on),
+  # capped at a 0.95 floor for near-universal behaviors (flag only clear misses). No cohort split
+  # (behavior_scores has no icp_client). Three conditional/low-opportunity behaviors
+  # (enroll_with_consent, provide_self_service_options, read_t_and_c_s) remain benchmark.type:
+  # distribution pending opportunity-gating.
+  demonstrate_professionalism_and_courtesy:
+    default: 0.95
+  act_as_representative_of_our_brand:
+    default: 0.95
+  appropriate_product_positioning_language:
+    default: 0.95
+  build_confidence_through_language:
+    default: 0.95
+  clarify_product_misunderstanding:
+    default: 0.95
+  actively_listen:
+    default: 0.95
+  positive_and_helpful_tone:
+    default: 0.95
+  confirm_caller_and_account_information:
+    default: 0.95
+  manage_call_efficiently:
+    default: 0.94
+  ask_effective_questions:
+    default: 0.92
+  protect_customer_information:
+    default: 0.92
+  transition_statement:
+    default: 0.87
+  complete_product_scope_expectations:
+    default: 0.70
+  provide_assurance:
+    default: 0.61
+  make_an_offer:
+    default: 0.45
+  test_resolution:
+    default: 0.29
+  consistent_closing:
+    default: 0.21
+  tailor_products_based_on_customer_responses:
+    default: 0.28
+  recap_resolution:
+    default: 0.13
+
   # ---- tool-usage metrics: sources currently disabled (no data to cohort-split) ----
   guided_flow_adoption:
     default: 0.65

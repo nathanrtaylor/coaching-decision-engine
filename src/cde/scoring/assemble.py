@@ -134,26 +134,33 @@ def _compute_scores(
     return out
 
 
-def _warn_benchmark_outliers(df: pd.DataFrame, config: Dict[str, Any], lo: float = 0.05, hi: float = 0.95) -> None:
+def _warn_benchmark_outliers(df: pd.DataFrame, config: Dict[str, Any], lo_q: float = 0.01, hi_q: float = 0.99) -> None:
     """
-    Data-quality guard: if a metric's benchmark sits at an extreme percentile of the observed
-    values (nearly everyone meets it, or nearly no one does), the benchmark is likely wrong/
-    unit-mismatched. Log a warning per offending metric so Ops can correct benchmarks.yaml.
-    Percentile scoring keeps such a metric from dominating, but the boundary is still misplaced.
+    Data-quality guard for wrong-scale / wrong-unit benchmarks: flag a metric when its benchmark
+    falls OUTSIDE the observed value range [p1, p99]. This catches genuine scale mismatches
+    (e.g. talk_time=50 vs a 700-1800s distribution, nsp100=1.0 vs 0-0.17) without flagging a
+    benchmark that is deliberately strict but on the right scale (e.g. a 0.95 floor on a 0-1
+    behavior). A metric whose benchmark sits below its entire distribution (no discrimination)
+    still surfaces here, which is the intended signal.
+
+    Windowed value is reconstructed as level_8w (mean gap) + benchmark_8w (mean benchmark).
     """
-    if "level_8w" not in df.columns or "metric" not in df.columns:
+    if not {"level_8w", "benchmark_8w"}.issubset(df.columns) or "metric" not in df.columns:
         return
     for metric, g in df.groupby("metric"):
-        gap = pd.to_numeric(g["level_8w"], errors="coerce").dropna()
-        if gap.empty:
+        lvl = pd.to_numeric(g["level_8w"], errors="coerce")
+        bench = pd.to_numeric(g["benchmark_8w"], errors="coerce")
+        value = (lvl + bench).dropna()
+        b = bench.dropna()
+        if value.empty or b.empty:
             continue
-        at_or_below = float((gap <= 0).mean())  # P(value <= benchmark); gap = value - benchmark
-        if at_or_below <= lo or at_or_below >= hi:
+        bval = float(b.median())
+        lo, hi = float(value.quantile(lo_q)), float(value.quantile(hi_q))
+        if bval < lo or bval > hi:
             log.warning(
-                "benchmark check: metric '%s' benchmark sits at an extreme of the data "
-                "(%.0f%% of agents at/below the benchmark value) - likely a unit/scale mismatch; "
-                "review configs/mappings/benchmarks.yaml.",
-                metric, at_or_below * 100,
+                "benchmark check: metric '%s' benchmark (%.4g) is outside the observed value "
+                "range [%.4g, %.4g] - likely a wrong scale/unit; review configs/mappings/benchmarks.yaml.",
+                metric, bval, lo, hi,
             )
 
 
